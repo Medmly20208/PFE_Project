@@ -10,12 +10,16 @@ import { useSelector } from "react-redux";
 
 const PieChart = ({ assets }) => {
   const portfolioData = useSelector((state) => state.ui.portfolioData);
-  console.log("port", portfolioData);
   const data = {
     options: {
       labels: assets?.map((item) => item.ticker),
       chart: {
-        height: 300, // Set the height of the chart
+        width: 800, // Set the height of the chart
+      },
+      plotOptions: {
+        pie: {
+          customScale: 1,
+        },
       },
       colors: ["#f97316", "#eab308", "#ef4444", "#8b5cf6", "#3b82f6"],
 
@@ -31,7 +35,7 @@ const PieChart = ({ assets }) => {
   };
 
   return (
-    <div className="border rounded-2xl mt-[30px] h-fit bg-white dark:bg-secondary-black p-6">
+    <div className="border rounded-2xl h-full   bg-white dark:bg-secondary-black p-6">
       <h1 className="text-2xl font-bold mb-[10px]">
         Composition de porte feuille
       </h1>

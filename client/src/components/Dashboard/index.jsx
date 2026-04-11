@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 //icon
 import { Icon } from "@iconify/react";
@@ -6,22 +6,76 @@ import { Icon } from "@iconify/react";
 //components
 import SectionTitle from "../SectionTitle";
 import CardContainer from "../CardContainer";
-import TodayData from "./TodayData";
-import MonthData from "./MonthData";
-import WeekData from "./WeekData";
+
 import ChartCard from "./ChartCard";
-import LastestExpenses from "./LastestExpenses";
 import PieChart from "./PieChart";
 import { useSelector } from "react-redux";
 //utils
 import { getCurrentDate } from "../../utils";
-import { useGetAssetsByUserIdQuery } from "../../api/apiSlice";
+import {
+  useGetAssetsByUserIdQuery,
+  useGetTickersPricesMutation,
+} from "../../api/apiSlice";
+import TotalValue from "./TotalValue";
+import Card from "./Card";
+import TrendingNews from "./TrendingNews";
 
 const Dashboard = () => {
   const userData = JSON.parse(localStorage.getItem("userData"));
   const { data: assets, isLoading } = useGetAssetsByUserIdQuery({
     userId: localStorage.getItem("id"),
   });
+  const [prices, setPrices] = useState({});
+
+  const [getTickersPrices, { data: pricesData, isLoading: pricesLoading }] =
+    useGetTickersPricesMutation();
+  const tickers = assets?.map((asset) => asset.ticker);
+  const fetchPrices = async () => {
+    if (!assets || assets.length === 0) return;
+
+    try {
+      getTickersPrices({ tickers }).then((data) => {
+        setPrices(data.data);
+      });
+    } catch (err) {
+      console.error("Failed to fetch prices", err);
+    }
+  };
+  // Fetch prices when assets change
+  useEffect(() => {
+    fetchPrices();
+  }, [assets]);
+
+  const totalQuantities = assets?.reduce((sum, asset) => {
+    return sum + asset.quantity;
+  }, 0);
+  const totalPortfolio = assets?.reduce((sum, asset) => {
+    const price = prices[asset.ticker] || 0;
+    return sum + price * asset.quantity;
+  }, 0);
+  const getMaxPriceTicker = (prices) => {
+    let maxTicker = null;
+    let maxPrice = -Infinity;
+
+    for (const ticker in prices) {
+      if (prices[ticker] > maxPrice) {
+        maxPrice = prices[ticker];
+        maxTicker = ticker;
+      }
+    }
+    return [maxTicker, maxPrice];
+  };
+  const largestPosition = (assets) => {
+    let maxQuantity = -1;
+    let largestTicker = "";
+    for (let i = 0; i < assets?.length; i++) {
+      if (assets[i].quantity > maxQuantity) {
+        maxQuantity = assets[i].quantity;
+        largestTicker = assets[i].ticker;
+      }
+    }
+    return [largestTicker, maxQuantity];
+  };
   return (
     <CardContainer>
       <SectionTitle title={"Dashboard"} className={"!text-left "} />
@@ -38,11 +92,30 @@ const Dashboard = () => {
         <Icon icon={"solar:calendar-linear"} className="text-[25px] " />
         <p className="dark:text-white">{getCurrentDate()}</p>
       </div>
-      <div className="grid grid-rows-1 xl:grid-cols-[minmax(300px,_1fr)_400px] gap-[10px] relative">
-        <div className="flex flex-col gap-[25px] border  rounded-2xl bg-white dark:bg-secondary-black p-4 lg:p-6 max-w-full"></div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4  gap-4">
+        <TotalValue portfolioValue={totalPortfolio} />
+        <Card
+          title={"Number of stockes"}
+          value={tickers?.length}
+          subValue={`${totalQuantities} in total`}
+        />
+        <Card
+          title={"Stock with highest price"}
+          value={getMaxPriceTicker(prices)[0]}
+          subValue={`${getMaxPriceTicker(prices)[1]}$`}
+        />
+        <Card
+          title={"Largest Position"}
+          value={largestPosition(assets)[0]}
+          subValue={`${largestPosition(assets)[1]} shares`}
+        />
+      </div>
+      <div className="min-h-[25rem] grid mt-[30px] sm:grid-cols-1 lg:grid-cols-2  gap-4">
+        <TrendingNews />
 
         <PieChart assets={assets} />
       </div>
+
       <ChartCard assets={assets} />
     </CardContainer>
   );
