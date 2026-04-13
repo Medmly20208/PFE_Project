@@ -8,4 +8,7 @@ router.put("/:assetId", assetController.updateAsset);
 router.delete("/:assetId", assetController.deleteAsset);
 router.post("/prices", assetController.getAssetPrices);
 router.post("/history", assetController.getPortfolioHistory);
+router.post("/returns", assetController.getPortfolioReturns);
+router.post("/metrics", assetController.getPortfolioMetrics);
+
 module.exports = router;
