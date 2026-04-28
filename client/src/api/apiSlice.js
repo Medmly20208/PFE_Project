@@ -52,6 +52,22 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["asset"],
     }),
+    getPortfolioReturns: builder.mutation({
+      query: (body) => ({
+        url: "/assets/returns",
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["asset"],
+    }),
+    getPortfolioMetrics: builder.mutation({
+      query: (body) => ({
+        url: "/assets/metrics",
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["asset"],
+    }),
 
     addExpense: builder.mutation({
       query: (expense) => ({
@@ -216,6 +232,8 @@ export const {
   useGetUserNameByIdQuery,
   useGetTickersPricesMutation,
   useUpdateUserNameByIdMutation,
+  useGetPortfolioReturnsMutation,
+  useGetPortfolioMetricsMutation,
   useUpdateAssetMutation,
   useDeleteExpenseByIdMutation,
   useEditExpenseMutation,

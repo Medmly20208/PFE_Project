@@ -13,7 +13,6 @@ const TrendingNews = () => {
         ` https://api.marketaux.com/v1/news/all?exchanges=NYSE&filter_entities=true&api_token=${import.meta.env.VITE_API_NEWS_TOKEN}`,
       )
       .then((res) => {
-        console.log("news", res);
         setNews(res.data.data);
         setIsLoading(false);
       })
@@ -25,11 +24,10 @@ const TrendingNews = () => {
   return (
     <div className="bg-white h-full  border rounded-2xl ">
       <div className="flex items-center gap-2 p-4">
-        <FireIcon className="w-12" />
+        <FireIcon className="w-12 text-[#ff3c00]" />
         <p className="text-2xl font-bold">Trending News</p>
       </div>
       {news?.map((item) => {
-        console.log("mine", item);
         return (
           <NewsCard
             key={item.uuid}

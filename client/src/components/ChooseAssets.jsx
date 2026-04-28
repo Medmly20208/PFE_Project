@@ -6,16 +6,29 @@ import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
 const topCompanies = {
+  // Tech (croissance)
   Apple: "AAPL",
-  Microsoft: "MSFT",
-  NVIDIA: "NVDA",
-  Amazon: "AMZN",
-  "Alphabet A": "GOOGL",
-  "Alphabet C": "GOOG",
-  Meta: "META",
-  "Berkshire Hathaway": "BRK.B",
-  "Eli Lilly": "LLY",
-  Broadcom: "AVGO",
+
+  // Finance
+  "JPMorgan Chase": "JPM",
+
+  // Santé (défensif)
+  "Johnson & Johnson": "JNJ",
+
+  // Énergie
+  "Exxon Mobil": "XOM",
+
+  // Industrie (plus stable que Boeing)
+  Honeywell: "HON",
+
+  // Consommation (remplace AT&T)
+  "Coca-Cola": "KO",
+
+  // ETF marché
+  "S&P 500 ETF": "SPY",
+
+  // Or (hedge)
+  "Gold ETF": "GLD",
 };
 
 const ChooseAssets = ({ onClick, inheritedClassName, nextPath }) => {

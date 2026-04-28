@@ -37,7 +37,6 @@ const ChartCard = ({ assets }) => {
   const [history, setHistory] = useState();
   const isDarkMode = useSelector((content) => content.ui.isDarkMode);
   const portfolioData = useSelector((state) => state.ui.portfolioData);
-  console.log("mmmmty assets", assets);
   let Dates = [];
 
   Dates = generateDateArray(startDate, endDate);

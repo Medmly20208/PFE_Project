@@ -9,6 +9,7 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   PencilSquareIcon,
   PresentationChartBarIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 //iconify
@@ -88,6 +89,12 @@ const Nav = ({ isNavDisplayed, ToggleNav }) => {
               setSelectedNav={setSelectedNav}
               selectedNav={selectedNav}
               icon={<DocumentChartBarIcon className="!w-[1.5em]" />}
+            />
+            <NavItem
+              path="Ratios"
+              setSelectedNav={setSelectedNav}
+              selectedNav={selectedNav}
+              icon={<ChartBarIcon className="!w-[1.5em]" />}
             />
             <NavItem
               path="Chat"

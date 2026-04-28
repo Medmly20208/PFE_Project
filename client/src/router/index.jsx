@@ -22,6 +22,7 @@ import Register from "../pages/Register";
 import Container from "../components/Container";
 import ChooseAssets from "../components/ChooseAssets";
 import InitAssets from "../components/InitAssets";
+import Ratios from "../components/Ratios";
 
 export const router = createBrowserRouter([
   {
@@ -62,6 +63,10 @@ export const router = createBrowserRouter([
       {
         path: "portfolio",
         element: <Portfolio />,
+      },
+      {
+        path: "ratios",
+        element: <Ratios />,
       },
       {
         path: "chat",

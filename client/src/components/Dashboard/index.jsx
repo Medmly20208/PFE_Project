@@ -95,7 +95,7 @@ const Dashboard = () => {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4  gap-4">
         <TotalValue portfolioValue={totalPortfolio} />
         <Card
-          title={"Number of stockes"}
+          title={"Number of stocks"}
           value={tickers?.length}
           subValue={`${totalQuantities} in total`}
         />
