@@ -97,6 +97,12 @@ const Nav = ({ isNavDisplayed, ToggleNav }) => {
               icon={<ChartBarIcon className="!w-[1.5em]" />}
             />
             <NavItem
+              path="Prediction"
+              setSelectedNav={setSelectedNav}
+              selectedNav={selectedNav}
+              icon={<ChartBarIcon className="!w-[1.5em]" />}
+            />
+            <NavItem
               path="Chat"
               setSelectedNav={setSelectedNav}
               selectedNav={selectedNav}

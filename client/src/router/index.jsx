@@ -23,6 +23,7 @@ import Container from "../components/Container";
 import ChooseAssets from "../components/ChooseAssets";
 import InitAssets from "../components/InitAssets";
 import Ratios from "../components/Ratios";
+import PredictionComponent from "../components/Prediction";
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: "ratios",
         element: <Ratios />,
+      },
+      {
+        path: "Prediction",
+        element: <PredictionComponent />,
       },
       {
         path: "chat",
