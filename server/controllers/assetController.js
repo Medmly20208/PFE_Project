@@ -6,6 +6,7 @@ const {
 } = require("../utils/utils");
 const YahooFinance = require("yahoo-finance2").default;
 const yahooFinance = new YahooFinance();
+const math = require("mathjs");
 
 const getPortfolioReturns = async (req, res) => {
   try {
@@ -307,6 +308,20 @@ const getPortfolioMetrics = async (req, res) => {
         cov_daily[i][j] = cov / (returnsMatrix.length - 1);
       }
     }
+    const data = await yahooFinance.historical("^TNX", {
+      period1: "2019-10-15",
+      period2: "2025-11-22",
+    });
+
+    const rfAnnualPercent = data[data.length - 1].close;
+    const GMVP = computeGMVP(covarianceMatrix, mu);
+    const VPTR = computeVPTR(covarianceMatrix, mu);
+    const VPTR_RF = computeVPTRWithRiskFree(
+      covarianceMatrix,
+      mu,
+      rfAnnualPercent,
+    );
+    const MVM1 = computeMeanVarianceModel1(covarianceMatrix, mu);
     const portfolioReturn = mu.reduce((sum, m, i) => sum + m * weights[i], 0);
     const portfolioReturnDaily = mu_daily.reduce(
       (sum, m, i) => sum + m * weights[i],
@@ -393,11 +408,14 @@ const getPortfolioMetrics = async (req, res) => {
         : (meanActiveReturn / trackingError) * Math.sqrt(252);
     return res.json({
       tickers,
+      GMVP,
+      VPTR,
+      VPTR_RF,
+      MVM1,
       shares,
       latestPrices,
       weights,
       betas,
-
       annualReturns: Object.fromEntries(tickers.map((t, i) => [t, mu[i]])),
       riskMetrics,
       portfolio: {
@@ -415,6 +433,206 @@ const getPortfolioMetrics = async (req, res) => {
     res.status(500).json({ error: "Error computing portfolio metrics" });
   }
 };
+
+function computeGMVP(Sigma, muArray) {
+  const n = Sigma.length;
+  const mu = math.matrix(muArray.map((x) => [x]));
+
+  const ones = math.ones(n, 1);
+
+  const invSigma = math.inv(Sigma);
+
+  const A = math.squeeze(math.multiply(math.transpose(ones), invSigma, mu));
+
+  const B = math.squeeze(math.multiply(math.transpose(mu), invSigma, mu));
+
+  const C = math.squeeze(math.multiply(math.transpose(ones), invSigma, ones));
+
+  const D = B * C - A * A;
+
+  // Global Minimum Variance Portfolio weights
+  const weightsMatrix = math.divide(math.multiply(invSigma, ones), C);
+
+  const weights = weightsMatrix.toArray().map((row) => row[0]);
+
+  // Portfolio variance
+  const variance = 1 / C;
+
+  // Portfolio volatility
+  const volatility = Math.sqrt(variance);
+
+  // Expected return
+  const expectedReturn = math.squeeze(
+    math.multiply(math.transpose(weightsMatrix), mu),
+  );
+
+  return {
+    A,
+    B,
+    C,
+    D,
+    weights,
+    expectedReturn,
+    variance,
+    volatility,
+  };
+}
+
+function computeVPTR(Sigma, muArray) {
+  //Minimum Variance Portfolio with a Target Return
+  const n = Sigma.length;
+  const mu = math.matrix(muArray.map((x) => [x]));
+
+  const ones = math.ones(n, 1);
+
+  const invSigma = math.inv(Sigma);
+
+  const A = math.squeeze(math.multiply(math.transpose(ones), invSigma, mu));
+
+  const B = math.squeeze(math.multiply(math.transpose(mu), invSigma, mu));
+
+  const C = math.squeeze(math.multiply(math.transpose(ones), invSigma, ones));
+
+  const D = B * C - A * A;
+
+  const invSigmaMu = math.multiply(invSigma, mu);
+  const invSigmaOnes = math.multiply(invSigma, ones);
+  const R_target = 0.12;
+  const term1 = math.multiply(
+    R_target,
+    math.subtract(math.multiply(C, invSigmaMu), math.multiply(A, invSigmaOnes)),
+  );
+
+  const term2 = math.subtract(
+    math.multiply(B, invSigmaOnes),
+    math.multiply(A, invSigmaMu),
+  );
+
+  const weightsTarget = math.multiply(1 / D, math.add(term1, term2));
+  const weights = weightsTarget.toArray().map((row) => row[0]);
+
+  // Portfolio variance
+  const varTarget = math.multiply(
+    math.transpose(weightsTarget),
+    math.multiply(Sigma, weightsTarget),
+  );
+
+  // Expected return
+  const expectedReturnTarget = math.multiply(math.transpose(weightsTarget), mu);
+  const volatility = Math.sqrt(varTarget.toArray()[0][0]);
+  return {
+    R_target,
+    weights,
+    volatility: volatility,
+    expectedReturn: expectedReturnTarget.toArray()[0][0],
+  };
+}
+function computeVPTRWithRiskFree(
+  Sigma,
+  muArray,
+  rfAnnualPercent,
+  R_target = 0.12,
+) {
+  // Minimum Variance Portfolio with Target Return + Risk-Free Asset
+  const n = Sigma.length;
+
+  const mu = math.matrix(muArray.map((x) => [x]));
+  const ones = math.ones(n, 1);
+  const invSigma = math.inv(Sigma);
+
+  // Convert annual % risk-free rate to daily decimal
+  const rf = rfAnnualPercent / 100 / 252;
+
+  const excessMu = math.subtract(mu, math.multiply(rf, ones));
+
+  const A = math.squeeze(math.multiply(math.transpose(ones), invSigma, mu));
+
+  const B = math.squeeze(math.multiply(math.transpose(mu), invSigma, mu));
+
+  const denominator = rf ** 2 - 2 * rf * A + B;
+
+  const scalar = (R_target - rf) / denominator;
+
+  const weightsTargetNonRisk = math.multiply(
+    scalar,
+    math.multiply(invSigma, excessMu),
+  );
+
+  const weights = weightsTargetNonRisk.toArray().map((row) => row[0]);
+
+  const varTargetNonRisk = math.multiply(
+    math.transpose(weightsTargetNonRisk),
+    math.multiply(Sigma, weightsTargetNonRisk),
+  );
+
+  const expectedReturnTargetNonRisk = math.add(
+    rf,
+    math.multiply(math.transpose(weightsTargetNonRisk), excessMu),
+  );
+
+  const variance = math.squeeze(varTargetNonRisk);
+  const volatility = Math.sqrt(variance);
+  const expectedReturn = math.squeeze(expectedReturnTargetNonRisk);
+
+  const riskyWeightSum = weights.reduce((sum, w) => sum + w, 0);
+  const riskFreeWeight = 1 - riskyWeightSum;
+
+  return {
+    R_target,
+    rf,
+    rfAnnualPercent,
+    weights,
+    riskFreeWeight,
+    volatility,
+    expectedReturn,
+  };
+}
+function computeMeanVarianceModel1(Sigma, muArray, phi = 50) {
+  const n = Sigma.length;
+  const mu = math.matrix(muArray.map((x) => [x]));
+  const ones = math.ones(n, 1);
+
+  const invSigma = math.inv(Sigma);
+
+  const A = math.squeeze(math.multiply(math.transpose(ones), invSigma, mu));
+  const B = math.squeeze(math.multiply(math.transpose(mu), invSigma, mu));
+  const C = math.squeeze(math.multiply(math.transpose(ones), invSigma, ones));
+  const D = B * C - A * A;
+
+  // ((mu * C + (phi - A) * ones) / C)
+  const rightTerm = math.divide(
+    math.add(math.multiply(C, mu), math.multiply(phi - A, ones)),
+    C,
+  );
+
+  // weights = (invSigma / phi) @ rightTerm
+  const weightsMatrix = math.multiply(math.divide(invSigma, phi), rightTerm);
+
+  const weights = weightsMatrix.toArray().map((row) => row[0]);
+
+  const varMatrix = math.multiply(
+    math.transpose(weightsMatrix),
+    math.multiply(Sigma, weightsMatrix),
+  );
+
+  const expectedReturnMatrix = math.multiply(math.transpose(weightsMatrix), mu);
+
+  const variance = math.squeeze(varMatrix);
+  const volatility = Math.sqrt(variance);
+  const expectedReturn = math.squeeze(expectedReturnMatrix);
+
+  return {
+    phi,
+    A,
+    B,
+    C,
+    D,
+    weights,
+    expectedReturn,
+    variance,
+    volatility,
+  };
+}
 
 module.exports = {
   createAsset,

@@ -55,7 +55,7 @@ const Login = () => {
     localStorage.setItem("id", data.data.id);
     localStorage.setItem("userData", JSON.stringify(data.data));
 
-    navigate("/choose-assets");
+    navigate("/Dashboard");
   }
 
   return (

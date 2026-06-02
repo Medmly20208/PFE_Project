@@ -13,11 +13,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 models = {
     "extra_trees": pickle.load(open("extra_trees.pkl", "rb")),
     "linear_regression": pickle.load(open("linear_regression.pkl", "rb")),
     "random_forest": pickle.load(open("random_forest.pkl", "rb")),
+    "lasso_regression": pickle.load(open("lasso_regression.pkl", "rb")),
+    "ridge_regression": pickle.load(open("ridge_regression.pkl", "rb")),
 }
 
 class PredictionInput(BaseModel):

@@ -2,25 +2,39 @@ import { useState } from "react";
 
 const modelMetrics = [
   {
-    model: "Extra Trees",
-    apiName: "extra_trees",
-    mae: 1.55088,
-    rmse: 2.181408,
-    r2: 0.999808,
+    model: "Ridge Regression",
+    apiName: "ridge_regression",
+    mae: 0.834933,
+    rmse: 1.306079,
+    r2: 0.999931,
   },
   {
     model: "Linear Regression",
     apiName: "linear_regression",
-    mae: 1.82134,
-    rmse: 2.553301,
-    r2: 0.999737,
+    mae: 1.843055,
+    rmse: 2.586067,
+    r2: 0.99973,
   },
   {
     model: "Random Forest",
     apiName: "random_forest",
-    mae: 1.818379,
-    rmse: 2.63334,
-    r2: 0.99972,
+    mae: 1.807916,
+    rmse: 2.588256,
+    r2: 0.99973,
+  },
+  {
+    model: "Extra Trees",
+    apiName: "extra_trees",
+    mae: 1.694719,
+    rmse: 2.62286,
+    r2: 0.999722,
+  },
+  {
+    model: "Lasso Regression",
+    apiName: "lasso_regression",
+    mae: 1.696082,
+    rmse: 2.834068,
+    r2: 0.999676,
   },
 ];
 
@@ -142,7 +156,7 @@ export default function PredictionComponent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-gray-900 p-3 font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
+                className="w-full rounded-lg bg-primary-red p-3 font-semibold text-white hover:bg-secondary-red disabled:opacity-60"
               >
                 {loading ? "Predicting..." : "Predict"}
               </button>
@@ -207,8 +221,8 @@ export default function PredictionComponent() {
             <div className="mt-6 rounded-xl bg-gray-100 p-4">
               <h3 className="mb-2 font-semibold text-gray-800">Best Model</h3>
               <p className="text-gray-700">
-                Extra Trees gives the best performance because it has the lowest
-                MAE and RMSE and the highest R² score.
+                Ridge Regression gives the best performance because it has the
+                lowest MAE and RMSE and the highest R² score.
               </p>
             </div>
           </div>

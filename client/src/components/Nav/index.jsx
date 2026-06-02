@@ -84,12 +84,7 @@ const Nav = ({ isNavDisplayed, ToggleNav }) => {
               selectedNav={selectedNav}
               icon={<PresentationChartBarIcon className="!w-[1.5em]" />}
             />
-            <NavItem
-              path="Reports"
-              setSelectedNav={setSelectedNav}
-              selectedNav={selectedNav}
-              icon={<DocumentChartBarIcon className="!w-[1.5em]" />}
-            />
+
             <NavItem
               path="Ratios"
               setSelectedNav={setSelectedNav}
@@ -103,25 +98,18 @@ const Nav = ({ isNavDisplayed, ToggleNav }) => {
               icon={<ChartBarIcon className="!w-[1.5em]" />}
             />
             <NavItem
-              path="Chat"
+              path="Markovitc"
               setSelectedNav={setSelectedNav}
               selectedNav={selectedNav}
-              icon={<ChatBubbleOvalLeftEllipsisIcon className="!w-[1.5em]" />}
+              icon={<DocumentChartBarIcon className="!w-[1.5em]" />}
+            />
+            <NavItem
+              path="Black litter-man"
+              setSelectedNav={setSelectedNav}
+              selectedNav={selectedNav}
+              icon={<DocumentChartBarIcon className="!w-[1.5em]" />}
             />
 
-            <NavItem
-              path="News"
-              setSelectedNav={setSelectedNav}
-              selectedNav={selectedNav}
-              icon={<NewspaperIcon className="!w-[1.5em]" />}
-            />
-            <NavItem
-              path="Blog"
-              setSelectedNav={setSelectedNav}
-              selectedNav={selectedNav}
-              icon={<PencilSquareIcon className="!w-[1.5em]" />}
-              subNavs={["all", "myBlog"]}
-            />
             <div></div>
           </div>
         </div>

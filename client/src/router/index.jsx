@@ -24,6 +24,7 @@ import ChooseAssets from "../components/ChooseAssets";
 import InitAssets from "../components/InitAssets";
 import Ratios from "../components/Ratios";
 import PredictionComponent from "../components/Prediction";
+import Markovitc from "../components/Markovitc";
 
 export const router = createBrowserRouter([
   {
@@ -56,11 +57,11 @@ export const router = createBrowserRouter([
         path: "profile",
         element: <Profile />,
       },
-
+      /*
       {
         path: "reports",
         element: <Reports />,
-      },
+      },*/
       {
         path: "portfolio",
         element: <Portfolio />,
@@ -72,6 +73,14 @@ export const router = createBrowserRouter([
       {
         path: "Prediction",
         element: <PredictionComponent />,
+      },
+      {
+        path: "Markovitc",
+        element: <Markovitc />,
+      },
+      {
+        path: "Black litter-man",
+        element: <p>Black litter-man</p>,
       },
       {
         path: "chat",
