@@ -23,12 +23,11 @@ const topCompanies = {
 
   // Consommation (remplace AT&T)
   "Coca-Cola": "KO",
+  // Semiconductors / AI
+  NVIDIA: "NVDA",
 
-  // ETF marché
-  "S&P 500 ETF": "SPY",
-
-  // Or (hedge)
-  "Gold ETF": "GLD",
+  // Communication Services
+  Alphabet: "GOOGL",
 };
 
 const ChooseAssets = ({ onClick, inheritedClassName, nextPath }) => {

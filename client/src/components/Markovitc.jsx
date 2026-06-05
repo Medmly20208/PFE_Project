@@ -65,6 +65,24 @@ const Markovitc = () => {
                 {(portfolioMetrics.GMVP.volatility * 100).toFixed(2)}%
               </p>
             </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio sharpe </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.GMVP.ratioSharpe}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio Trenyor </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.GMVP.ratioTreynor}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">alpha Jensen </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.GMVP.alphaJensen}
+              </p>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -146,6 +164,24 @@ const Markovitc = () => {
               <p className="text-sm text-gray-500">R target</p>
               <p className="text-xl font-semibold text-gray-900">
                 {(portfolioMetrics.VPTR.R_target * 100).toFixed(2)}%
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio sharpe </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR.ratioSharpe}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio Trenyor </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR.ratioTreynor}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">alpha Jensen </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR.alphaJensen}
               </p>
             </div>
           </div>
@@ -238,6 +274,24 @@ const Markovitc = () => {
               <p className="text-sm text-gray-500">Risk-Free Rate</p>
               <p className="text-xl font-semibold text-gray-900">
                 {portfolioMetrics.VPTR_RF.rfAnnualPercent.toFixed(2)}%
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio sharpe </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR_RF.ratioSharpe}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio Trenyor </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR_RF.ratioTreynor}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">alpha Jensen </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.VPTR_RF.alphaJensen}
               </p>
             </div>
           </div>
@@ -369,6 +423,24 @@ const Markovitc = () => {
               <p className="text-sm text-gray-500">Risk Aversion (φ)</p>
               <p className="text-xl font-semibold text-gray-900">
                 {portfolioMetrics.MVM1.phi}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio sharpe </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.MVM1.ratioSharpe}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">Ratio Trenyor </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.MVM1.ratioTreynor}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">alpha Jensen </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {portfolioMetrics.MVM1.alphaJensen}
               </p>
             </div>
           </div>

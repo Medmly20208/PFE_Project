@@ -110,3 +110,34 @@ export function calculateBetas(returnsMatrix, marketReturns, tickers) {
 
   return betas;
 }
+
+export function computePerformanceRatios(
+  portfolioReturn,
+  portfolioVolatility,
+  portfolioBeta,
+  riskFreeRate,
+  marketReturn,
+) {
+  // Sharpe Ratio
+  const ratioSharpe =
+    portfolioVolatility === 0
+      ? null
+      : (portfolioReturn - riskFreeRate) / portfolioVolatility;
+
+  // Treynor Ratio
+  const ratioTreynor =
+    portfolioBeta === 0
+      ? null
+      : (portfolioReturn - riskFreeRate) / portfolioBeta;
+
+  // Jensen Alpha
+  const alphaJensen =
+    portfolioReturn -
+    (riskFreeRate + portfolioBeta * (marketReturn - riskFreeRate));
+
+  return {
+    ratioSharpe,
+    ratioTreynor,
+    alphaJensen,
+  };
+}

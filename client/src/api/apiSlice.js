@@ -68,7 +68,14 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["asset"],
     }),
-
+    getblackLitterManPortfolioAllocation: builder.mutation({
+      query: (body) => ({
+        url: "/assets/blacklitterman",
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["asset"],
+    }),
     addExpense: builder.mutation({
       query: (expense) => ({
         url: "/expenses",
@@ -232,6 +239,7 @@ export const {
   useGetUserNameByIdQuery,
   useGetTickersPricesMutation,
   useUpdateUserNameByIdMutation,
+  useGetblackLitterManPortfolioAllocationMutation,
   useGetPortfolioReturnsMutation,
   useGetPortfolioMetricsMutation,
   useUpdateAssetMutation,

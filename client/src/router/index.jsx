@@ -25,6 +25,7 @@ import InitAssets from "../components/InitAssets";
 import Ratios from "../components/Ratios";
 import PredictionComponent from "../components/Prediction";
 import Markovitc from "../components/Markovitc";
+import BlackLitterman from "../components/BlackLitterman";
 
 export const router = createBrowserRouter([
   {
@@ -80,7 +81,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "Black litter-man",
-        element: <p>Black litter-man</p>,
+        element: <BlackLitterman />,
       },
       {
         path: "chat",

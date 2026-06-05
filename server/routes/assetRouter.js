@@ -11,4 +11,9 @@ router.post("/history", assetController.getPortfolioHistory);
 router.post("/returns", assetController.getPortfolioReturns);
 router.post("/metrics", assetController.getPortfolioMetrics);
 
+router.post(
+  "/blacklitterman",
+  assetController.getBlackLitterManModelPortfolioAllocation,
+);
+
 module.exports = router;

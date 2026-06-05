@@ -3,6 +3,7 @@ const {
   CalculateVarHistorical,
   CalculateVarAndEs,
   calculateBetas,
+  computePerformanceRatios,
 } = require("../utils/utils");
 const YahooFinance = require("yahoo-finance2").default;
 const yahooFinance = new YahooFinance();
@@ -314,14 +315,7 @@ const getPortfolioMetrics = async (req, res) => {
     });
 
     const rfAnnualPercent = data[data.length - 1].close;
-    const GMVP = computeGMVP(covarianceMatrix, mu);
-    const VPTR = computeVPTR(covarianceMatrix, mu);
-    const VPTR_RF = computeVPTRWithRiskFree(
-      covarianceMatrix,
-      mu,
-      rfAnnualPercent,
-    );
-    const MVM1 = computeMeanVarianceModel1(covarianceMatrix, mu);
+
     const portfolioReturn = mu.reduce((sum, m, i) => sum + m * weights[i], 0);
     const portfolioReturnDaily = mu_daily.reduce(
       (sum, m, i) => sum + m * weights[i],
@@ -354,7 +348,37 @@ const getPortfolioMetrics = async (req, res) => {
       marketReturns.reduce((sum, r) => sum + r, 0) / marketReturns.length;
 
     const marketReturn = meanDailyMarketReturn * 252;
-
+    const GMVP = computeGMVP(
+      covarianceMatrix,
+      mu,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const VPTR = computeVPTR(
+      covarianceMatrix,
+      mu,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const VPTR_RF = computeVPTRWithRiskFree(
+      covarianceMatrix,
+      mu,
+      rfAnnualPercent,
+      0.12,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const MVM1 = computeMeanVarianceModel1(
+      covarianceMatrix,
+      mu,
+      20,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
     // Sharpe
     const ratio_sharpe =
       (portfolioReturn - US_10_year_treasury) / portfolioVolatility;
@@ -434,7 +458,13 @@ const getPortfolioMetrics = async (req, res) => {
   }
 };
 
-function computeGMVP(Sigma, muArray) {
+function computeGMVP(
+  Sigma,
+  muArray,
+  portfolioBeta,
+  riskFreeRate,
+  marketReturn,
+) {
   const n = Sigma.length;
   const mu = math.matrix(muArray.map((x) => [x]));
 
@@ -465,7 +495,13 @@ function computeGMVP(Sigma, muArray) {
   const expectedReturn = math.squeeze(
     math.multiply(math.transpose(weightsMatrix), mu),
   );
-
+  const { ratioSharpe, ratioTreynor, alphaJensen } = computePerformanceRatios(
+    expectedReturn,
+    volatility,
+    portfolioBeta,
+    riskFreeRate,
+    marketReturn,
+  );
   return {
     A,
     B,
@@ -475,10 +511,19 @@ function computeGMVP(Sigma, muArray) {
     expectedReturn,
     variance,
     volatility,
+    ratioSharpe,
+    ratioTreynor,
+    alphaJensen,
   };
 }
 
-function computeVPTR(Sigma, muArray) {
+function computeVPTR(
+  Sigma,
+  muArray,
+  portfolioBeta,
+  riskFreeRate,
+  marketReturn,
+) {
   //Minimum Variance Portfolio with a Target Return
   const n = Sigma.length;
   const mu = math.matrix(muArray.map((x) => [x]));
@@ -520,11 +565,22 @@ function computeVPTR(Sigma, muArray) {
   // Expected return
   const expectedReturnTarget = math.multiply(math.transpose(weightsTarget), mu);
   const volatility = Math.sqrt(varTarget.toArray()[0][0]);
+  const { ratioSharpe, ratioTreynor, alphaJensen } = computePerformanceRatios(
+    expectedReturnTarget.toArray()[0][0],
+    volatility,
+    portfolioBeta,
+    riskFreeRate,
+    marketReturn,
+  );
+  console.log("expected", expectedReturnTarget.toArray()[0][0]);
   return {
     R_target,
     weights,
     volatility: volatility,
     expectedReturn: expectedReturnTarget.toArray()[0][0],
+    ratioSharpe,
+    ratioTreynor,
+    alphaJensen,
   };
 }
 function computeVPTRWithRiskFree(
@@ -532,6 +588,9 @@ function computeVPTRWithRiskFree(
   muArray,
   rfAnnualPercent,
   R_target = 0.12,
+  portfolioBeta,
+  riskFreeRate,
+  marketReturn,
 ) {
   // Minimum Variance Portfolio with Target Return + Risk-Free Asset
   const n = Sigma.length;
@@ -576,7 +635,14 @@ function computeVPTRWithRiskFree(
 
   const riskyWeightSum = weights.reduce((sum, w) => sum + w, 0);
   const riskFreeWeight = 1 - riskyWeightSum;
-
+  const { ratioSharpe, ratioTreynor, alphaJensen } = computePerformanceRatios(
+    expectedReturn,
+    volatility,
+    portfolioBeta,
+    riskFreeRate,
+    marketReturn,
+  );
+  console.log("err", expectedReturn);
   return {
     R_target,
     rf,
@@ -585,9 +651,19 @@ function computeVPTRWithRiskFree(
     riskFreeWeight,
     volatility,
     expectedReturn,
+    ratioSharpe,
+    ratioTreynor,
+    alphaJensen,
   };
 }
-function computeMeanVarianceModel1(Sigma, muArray, phi = 50) {
+function computeMeanVarianceModel1(
+  Sigma,
+  muArray,
+  phi = 20,
+  portfolioBeta,
+  riskFreeRate,
+  marketReturn,
+) {
   const n = Sigma.length;
   const mu = math.matrix(muArray.map((x) => [x]));
   const ones = math.ones(n, 1);
@@ -620,7 +696,13 @@ function computeMeanVarianceModel1(Sigma, muArray, phi = 50) {
   const variance = math.squeeze(varMatrix);
   const volatility = Math.sqrt(variance);
   const expectedReturn = math.squeeze(expectedReturnMatrix);
-
+  const { ratioSharpe, ratioTreynor, alphaJensen } = computePerformanceRatios(
+    expectedReturn,
+    volatility,
+    portfolioBeta,
+    riskFreeRate,
+    marketReturn,
+  );
   return {
     phi,
     A,
@@ -631,9 +713,234 @@ function computeMeanVarianceModel1(Sigma, muArray, phi = 50) {
     expectedReturn,
     variance,
     volatility,
+    ratioSharpe,
+    ratioTreynor,
+    alphaJensen,
   };
 }
 
+const getBlackLitterManModelPortfolioAllocation = async (req, res) => {
+  try {
+    const { shares, P, Q, start = "2019-10-15", end = "2025-11-22" } = req.body;
+
+    // 🔒 Validation
+    if (!shares || typeof shares !== "object") {
+      return res.status(400).json({ error: "Shares object is required" });
+    }
+
+    if (!start || !end) {
+      return res.status(400).json({ error: "Start and end required" });
+    }
+
+    const tickers = Object.keys(shares);
+    const quantities = Object.values(shares);
+    const n = tickers.length;
+
+    if (n === 0) {
+      return res.status(400).json({ error: "No tickers provided" });
+    }
+    marketCaps = [];
+    for (const ticker of tickers) {
+      try {
+        const quote = await yahooFinance.quote(ticker);
+
+        marketCaps.push(quote.marketCap);
+      } catch (error) {
+        console.error(`Error fetching ${ticker}`, error);
+      }
+    }
+    const results = await Promise.all(
+      tickers.map(async (ticker) => {
+        const data = await yahooFinance.historical(ticker, {
+          period1: start,
+          period2: end,
+        });
+
+        return {
+          ticker,
+          prices: data.map((d) => d.close).filter((v) => v != null),
+        };
+      }),
+    );
+
+    const minLength = Math.min(...results.map((r) => r.prices.length));
+    const marketData = await yahooFinance.historical("^GSPC", {
+      period1: start,
+      period2: end,
+    });
+
+    const marketPrices = marketData
+      .map((d) => d.close)
+      .filter((v) => v != null)
+      .slice(-minLength);
+
+    const marketReturns = [];
+    for (let i = 1; i < marketPrices.length; i++) {
+      const prev = marketPrices[i - 1];
+      const curr = marketPrices[i];
+      marketReturns.push((curr - prev) / prev);
+    }
+    const meanMarket =
+      marketReturns.reduce((a, b) => a + b, 0) / marketReturns.length;
+
+    const priceMatrix = results.map((r) => r.prices.slice(-minLength));
+    const latestPrices = priceMatrix.map((p) => p[p.length - 1]);
+
+    const values = latestPrices.map((price, i) => price * quantities[i]);
+    const totalQuantities = quantities.reduce((a, b) => a + b, 0);
+    const totalValue = values.reduce((a, b) => a + b, 0);
+
+    const weights = quantities.map((v) => v / totalQuantities);
+    const portfolioDailyReturns = [];
+    const returnsMatrix = [];
+
+    for (let i = 1; i < minLength; i++) {
+      const row = [];
+
+      for (let j = 0; j < n; j++) {
+        const prev = priceMatrix[j][i - 1];
+        const curr = priceMatrix[j][i];
+
+        row.push((curr - prev) / prev);
+      }
+
+      returnsMatrix.push(row);
+      portfolioDailyReturns.push(
+        row.reduce((sum, item, index) => {
+          return sum + weights[index] * item;
+        }, 0),
+      );
+    }
+
+    const betas = calculateBetas(returnsMatrix, marketReturns, tickers);
+    const portfolioBeta = tickers.reduce((sum, ticker, i) => {
+      return sum + weights[i] * betas[ticker];
+    }, 0);
+    const mu_daily = [];
+
+    for (let j = 0; j < n; j++) {
+      const vals = returnsMatrix.map((r) => r[j]);
+      const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+      mu_daily.push(mean);
+    }
+    const mu = mu_daily.map((m) => m * 252);
+
+    const covarianceMatrix = Array.from({ length: n }, () => Array(n).fill(0));
+    const cov_daily = Array.from({ length: n }, () => Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        let cov = 0;
+
+        for (let k = 0; k < returnsMatrix.length; k++) {
+          cov +=
+            (returnsMatrix[k][i] - mu_daily[i]) *
+            (returnsMatrix[k][j] - mu_daily[j]);
+        }
+
+        covarianceMatrix[i][j] = (cov / (returnsMatrix.length - 1)) * 252;
+        cov_daily[i][j] = cov / (returnsMatrix.length - 1);
+      }
+    }
+    const data = await yahooFinance.historical("^TNX", {
+      period1: "2019-10-15",
+      period2: "2025-11-22",
+    });
+
+    const rfAnnualPercent = data[data.length - 1].close;
+    const mu_bl = calculateExcessReturnWithBlackLitterMan(
+      mu,
+      covarianceMatrix,
+      P,
+      Q,
+      marketCaps,
+    );
+
+    const US_10_year_treasury = 0.04321;
+    // Market annual return
+    const meanDailyMarketReturn =
+      marketReturns.reduce((sum, r) => sum + r, 0) / marketReturns.length;
+
+    const marketReturn = meanDailyMarketReturn * 252;
+    const GMVP = computeGMVP(
+      covarianceMatrix,
+      mu_bl,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const VPTR = computeVPTR(
+      covarianceMatrix,
+      mu_bl,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const VPTR_RF = computeVPTRWithRiskFree(
+      covarianceMatrix,
+      mu_bl,
+      rfAnnualPercent,
+      0.12,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    const MVM1 = computeMeanVarianceModel1(
+      covarianceMatrix,
+      mu_bl,
+      20,
+      portfolioBeta,
+      US_10_year_treasury,
+      marketReturn,
+    );
+    res.json({
+      tickers,
+      mu_bl,
+      GMVP,
+      VPTR,
+      VPTR_RF,
+      MVM1,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error computing portfolio metrics" });
+  }
+};
+
+function calculateExcessReturnWithBlackLitterMan(
+  mu,
+  cov,
+  p,
+  q,
+  marketCaps,
+  lambda = 2,
+) {
+  console.log("p", p);
+  console.log("q", q);
+  const totalPortoflioMarketCap = marketCaps.reduce(
+    (sum, weight) => sum + weight,
+    0,
+  );
+  const weight_market = marketCaps.map(
+    (item) => item / totalPortoflioMarketCap,
+  );
+  const Sigma = math.matrix(cov);
+  const P = math.matrix(p);
+  const Q = math.matrix(q);
+  const wMarket = math.matrix(weight_market);
+  const omega = math.multiply(
+    0.25,
+    math.multiply(P, math.multiply(Sigma, math.transpose(P))),
+  );
+  const pi = math.multiply(lambda, math.multiply(Sigma, wMarket));
+  const invSigma = math.inv(Sigma);
+  const invOmega = math.inv(omega);
+  const term12 = math.multiply(math.transpose(P), math.multiply(invOmega, P));
+  const term22 = math.multiply(math.transpose(P), math.multiply(invOmega, Q));
+  const firstTerm = math.inv(math.add(invSigma, term12));
+  const secondTerm = math.add(math.multiply(invSigma, pi), term22);
+  const finalResult = math.multiply(firstTerm, secondTerm);
+  return finalResult.toArray();
+}
 module.exports = {
   createAsset,
   getAssetPrices,
@@ -643,4 +950,5 @@ module.exports = {
   getPortfolioReturns,
   deleteAsset,
   getPortfolioMetrics,
+  getBlackLitterManModelPortfolioAllocation,
 };
