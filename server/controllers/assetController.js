@@ -467,7 +467,6 @@ function computeGMVP(
 ) {
   const n = Sigma.length;
   const mu = math.matrix(muArray.map((x) => [x]));
-
   const ones = math.ones(n, 1);
 
   const invSigma = math.inv(Sigma);
@@ -572,7 +571,6 @@ function computeVPTR(
     riskFreeRate,
     marketReturn,
   );
-  console.log("expected", expectedReturnTarget.toArray()[0][0]);
   return {
     R_target,
     weights,
@@ -642,7 +640,6 @@ function computeVPTRWithRiskFree(
     riskFreeRate,
     marketReturn,
   );
-  console.log("err", expectedReturn);
   return {
     R_target,
     rf,
@@ -841,42 +838,53 @@ const getBlackLitterManModelPortfolioAllocation = async (req, res) => {
         cov_daily[i][j] = cov / (returnsMatrix.length - 1);
       }
     }
+    const meanDailyMarketReturn =
+      marketReturns.reduce((sum, r) => sum + r, 0) / marketReturns.length;
     const data = await yahooFinance.historical("^TNX", {
       period1: "2019-10-15",
       period2: "2025-11-22",
     });
 
+    const varianceDaily =
+      marketReturns.reduce(
+        (sum, r) => sum + Math.pow(r - meanDailyMarketReturn, 2),
+        0,
+      ) /
+      (marketReturns.length - 1);
+
+    const annualVariance = varianceDaily * 252;
     const rfAnnualPercent = data[data.length - 1].close;
-    const mu_bl = calculateExcessReturnWithBlackLitterMan(
+    const annualReturn = meanMarket * 252;
+    console.log("mu", annualReturn, rfAnnualPercent);
+    const [mu_bl, newSigma] = calculateExcessReturnWithBlackLitterMan(
       mu,
       covarianceMatrix,
       P,
       Q,
       marketCaps,
+      (annualReturn - rfAnnualPercent / 100) / annualVariance,
     );
 
     const US_10_year_treasury = 0.04321;
     // Market annual return
-    const meanDailyMarketReturn =
-      marketReturns.reduce((sum, r) => sum + r, 0) / marketReturns.length;
 
     const marketReturn = meanDailyMarketReturn * 252;
     const GMVP = computeGMVP(
-      covarianceMatrix,
+      newSigma,
       mu_bl,
       portfolioBeta,
       US_10_year_treasury,
       marketReturn,
     );
     const VPTR = computeVPTR(
-      covarianceMatrix,
+      newSigma,
       mu_bl,
       portfolioBeta,
       US_10_year_treasury,
       marketReturn,
     );
     const VPTR_RF = computeVPTRWithRiskFree(
-      covarianceMatrix,
+      newSigma,
       mu_bl,
       rfAnnualPercent,
       0.12,
@@ -885,7 +893,7 @@ const getBlackLitterManModelPortfolioAllocation = async (req, res) => {
       marketReturn,
     );
     const MVM1 = computeMeanVarianceModel1(
-      covarianceMatrix,
+      newSigma,
       mu_bl,
       20,
       portfolioBeta,
@@ -914,8 +922,6 @@ function calculateExcessReturnWithBlackLitterMan(
   marketCaps,
   lambda = 2,
 ) {
-  console.log("p", p);
-  console.log("q", q);
   const totalPortoflioMarketCap = marketCaps.reduce(
     (sum, weight) => sum + weight,
     0,
@@ -928,18 +934,22 @@ function calculateExcessReturnWithBlackLitterMan(
   const Q = math.matrix(q);
   const wMarket = math.matrix(weight_market);
   const omega = math.multiply(
-    0.25,
+    0.025,
     math.multiply(P, math.multiply(Sigma, math.transpose(P))),
   );
+
   const pi = math.multiply(lambda, math.multiply(Sigma, wMarket));
-  const invSigma = math.inv(Sigma);
+  console.log("pi", pi);
+  const invSigma = math.inv(math.multiply(0.025, Sigma));
   const invOmega = math.inv(omega);
   const term12 = math.multiply(math.transpose(P), math.multiply(invOmega, P));
   const term22 = math.multiply(math.transpose(P), math.multiply(invOmega, Q));
   const firstTerm = math.inv(math.add(invSigma, term12));
   const secondTerm = math.add(math.multiply(invSigma, pi), term22);
   const finalResult = math.multiply(firstTerm, secondTerm);
-  return finalResult.toArray();
+  // M=[(τΣ)−1+P⊤Ω−1P]−1
+  const newCov = math.add(Sigma, firstTerm);
+  return [finalResult.toArray(), newCov.toArray()];
 }
 module.exports = {
   createAsset,
